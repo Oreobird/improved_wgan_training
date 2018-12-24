@@ -16,7 +16,7 @@ import scipy.misc
 import math
 import sys
 
-MODEL_DIR = '/tmp/imagenet'
+MODEL_DIR = 'E:/ml/fer/imagenet'
 DATA_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
 softmax = None
 
@@ -32,7 +32,7 @@ def get_inception_score(images, splits=10):
   for img in images:
     img = img.astype(np.float32)
     inps.append(np.expand_dims(img, 0))
-  bs = 100
+  bs = 1
   with tf.Session() as sess:
     preds = []
     n_batches = int(math.ceil(float(len(inps)) / float(bs)))
@@ -70,7 +70,7 @@ def _init_inception():
     print('Succesfully downloaded', filename, statinfo.st_size, 'bytes.')
   tarfile.open(filepath, 'r:gz').extractall(MODEL_DIR)
   with tf.gfile.FastGFile(os.path.join(
-      MODEL_DIR, 'classify_image_graph_def.pb'), 'rb') as f:
+    MODEL_DIR, 'classify_image_graph_def.pb'), 'rb') as f:
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(f.read())
     _ = tf.import_graph_def(graph_def, name='')
@@ -88,9 +88,9 @@ def _init_inception():
                     new_shape.append(None)
                 else:
                     new_shape.append(s)
-            o._shape = tf.TensorShape(new_shape)
+            o.set_shape(tf.TensorShape(new_shape))
     w = sess.graph.get_operation_by_name("softmax/logits/MatMul").inputs[1]
-    logits = tf.matmul(tf.squeeze(pool3), w)
+    logits = tf.matmul(tf.squeeze(pool3, [1, 2]), w)
     softmax = tf.nn.softmax(logits)
 
 if softmax is None:
